@@ -69,11 +69,10 @@ export async function registerRoutes(
     
     try {
       // Coerce numeric fields
-      const input = api.expenses.create.input.parse({
-        ...req.body,
-        amount: Number(req.body.amount),
-        companyId: Number(req.body.companyId)
-      });
+      const input = api.expenses.create.input.extend({
+        amount: z.coerce.string(), // Keep as string for numeric(10,2) but validate it's numeric
+        companyId: z.coerce.number()
+      }).parse(req.body);
       
       const expense = await storage.createExpense({
         ...input,
