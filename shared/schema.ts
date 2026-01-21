@@ -56,6 +56,7 @@ export const usersRelations = relations(users, ({ many }) => ({
 }));
 
 // Schemas
+export const insertCompanySchema = createInsertSchema(companies).omit({ id: true, createdAt: true });
 export const insertExpenseSchema = createInsertSchema(expenses).omit({ id: true, createdAt: true, status: true, rejectionReason: true, userId: true, approvedBy: true });
 export const updateExpenseSchema = createInsertSchema(expenses).pick({
   description: true,
