@@ -20,8 +20,14 @@ export default function Approvals() {
   // Filter based on role
   // Manager sees 'pending'
   // Finance sees 'approved_manager'
-  const filterStatus = role === 'finance' ? 'approved_manager' : 'pending';
-  const { data: expenses, isLoading } = useExpenses({ status: filterStatus });
+  // Admin sees all pending
+  const filterStatus = role === 'admin' ? undefined : (role === 'finance' ? 'approved_manager' : 'pending');
+  const { data: allExpenses, isLoading } = useExpenses();
+  
+  const expenses = allExpenses?.filter(e => {
+    if (role === 'admin') return e.status !== 'approved_finance' && e.status !== 'rejected';
+    return e.status === filterStatus;
+  });
 
   const [rejectId, setRejectId] = useState<number | null>(null);
   const [rejectReason, setRejectReason] = useState("");
@@ -29,8 +35,19 @@ export default function Approvals() {
   const handleApprove = (id: number) => {
     // Manager -> approved_manager
     // Finance -> approved_finance
-    const nextStatus = role === 'finance' ? 'approved_finance' : 'approved_manager';
-    updateStatus({ id, status: nextStatus, billable: true }); // Defaulting billable to true for simplicity, finance can change logic later
+    // Admin -> If pending, approved_manager. If approved_manager, approved_finance.
+    let nextStatus: 'approved_manager' | 'approved_finance' = 'approved_manager';
+    
+    if (role === 'finance') {
+      nextStatus = 'approved_finance';
+    } else if (role === 'admin') {
+      const expense = expenses?.find(e => e.id === id);
+      nextStatus = expense?.status === 'approved_manager' ? 'approved_finance' : 'approved_manager';
+    } else {
+      nextStatus = 'approved_manager';
+    }
+
+    updateStatus({ id, status: nextStatus, billable: true }); 
   };
 
   const handleReject = () => {

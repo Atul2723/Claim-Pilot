@@ -107,18 +107,19 @@ export async function registerRoutes(
     const user = req.user as any;
     const dbUser = await storage.getUser(user.claims.sub);
 
-    if (!['manager', 'finance'].includes(dbUser?.role || '')) {
+    if (!['manager', 'finance', 'admin'].includes(dbUser?.role || '')) {
       return res.status(403).json({ message: "Unauthorized" });
     }
 
     // Manager can approve to 'approved_manager' or reject
     // Finance can approve to 'approved_finance' or reject
+    // Admin can do anything
     const input = api.expenses.updateStatus.input.parse(req.body);
 
-    // TODO: Add strict state transition checks if needed
-    // e.g. Manager can't approve if already approved_finance? 
-
-    const updated = await storage.updateExpenseStatus(Number(req.params.id), input);
+    const updated = await storage.updateExpenseStatus(Number(req.params.id), {
+      ...input,
+      approvedBy: dbUser?.id
+    });
     res.json(updated);
   });
 

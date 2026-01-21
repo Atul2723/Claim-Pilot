@@ -25,6 +25,7 @@ export const expenses = pgTable("expenses", {
   billable: boolean("billable").default(false).notNull(),
   receiptUrl: text("receipt_url"),
   rejectionReason: text("rejection_reason"),
+  approvedBy: varchar("approved_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -33,6 +34,12 @@ export const expensesRelations = relations(expenses, ({ one }) => ({
   user: one(users, {
     fields: [expenses.userId],
     references: [users.id],
+    relationName: "expense_owner",
+  }),
+  approver: one(users, {
+    fields: [expenses.approvedBy],
+    references: [users.id],
+    relationName: "expense_approver",
   }),
   company: one(companies, {
     fields: [expenses.companyId],
