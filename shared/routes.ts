@@ -101,8 +101,9 @@ export const api = {
       method: 'PATCH' as const,
       path: '/api/expenses/:id/status',
       input: z.object({
-        status: z.enum(['approved_manager', 'approved_finance', 'rejected']),
+        status: z.enum(['approved_manager', 'approved_finance', 'rejected', 'processed']),
         rejectionReason: z.string().optional(),
+        approvalComments: z.string().optional(),
         billable: z.boolean().optional(),
       }),
       responses: {

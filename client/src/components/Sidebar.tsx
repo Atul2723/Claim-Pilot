@@ -30,6 +30,7 @@ export function Sidebar() {
     { href: "/my-expenses", label: "My Expenses", icon: Receipt, roles: ['employee', 'manager', 'finance', 'admin'] },
     { href: "/submit", label: "Submit Claim", icon: PlusCircle, roles: ['employee', 'manager', 'finance', 'admin'] },
     { href: "/approvals", label: "Approvals", icon: CheckSquare, roles: ['manager', 'finance', 'admin'] },
+    { href: "/reports", label: "Reports", icon: BookOpen, roles: ['manager', 'finance', 'admin'] },
     { href: "/ledger", label: "Ledger", icon: BookOpen, roles: ['finance', 'admin'] },
     { href: "/companies", label: "Companies", icon: Building2, roles: ['admin'] },
     { href: "/users", label: "Users", icon: Users, roles: ['admin'] },

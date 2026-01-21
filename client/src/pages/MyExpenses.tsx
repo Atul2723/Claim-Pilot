@@ -51,7 +51,13 @@ export default function MyExpenses() {
                     {expense.status === 'rejected' && expense.rejectionReason && (
                       <div className="flex items-center gap-1 text-[10px] text-red-500 mt-1">
                         <Info className="w-2.5 h-2.5" />
-                        Reason: {expense.rejectionReason}
+                        Rejected: {expense.rejectionReason}
+                      </div>
+                    )}
+                    {expense.approvalComments && (
+                      <div className="flex items-center gap-1 text-[10px] text-blue-500 mt-1">
+                        <Info className="w-2.5 h-2.5" />
+                        Note: {expense.approvalComments}
                       </div>
                     )}
                   </div>
@@ -77,14 +83,16 @@ export default function MyExpenses() {
                 </TableCell>
                 <TableCell className="text-right">
                   {(expense.status === 'pending' || expense.status === 'rejected') && (
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 text-slate-500 hover:text-blue-600"
-                      onClick={() => setLocation(`/submit?edit=${expense.id}`)}
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </Button>
+                    <div className="flex justify-end gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-slate-500 hover:text-blue-600"
+                        onClick={() => setLocation(`/submit?edit=${expense.id}`)}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                    </div>
                   )}
                 </TableCell>
               </TableRow>

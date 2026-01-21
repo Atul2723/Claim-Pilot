@@ -31,12 +31,12 @@ export default function Approvals() {
 
   const [rejectId, setRejectId] = useState<number | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [approvalComments, setApprovalComments] = useState("");
+  const [isBillable, setIsBillable] = useState(true);
+  const [approvingId, setApprovingId] = useState<number | null>(null);
 
   const handleApprove = (id: number) => {
-    // Manager -> approved_manager
-    // Finance -> approved_finance
-    // Admin -> If pending, approved_manager. If approved_manager, approved_finance.
-    let nextStatus: 'approved_manager' | 'approved_finance' = 'approved_manager';
+    let nextStatus: 'approved_manager' | 'approved_finance' | 'processed' = 'approved_manager';
     
     if (role === 'finance') {
       nextStatus = 'approved_finance';
@@ -47,7 +47,14 @@ export default function Approvals() {
       nextStatus = 'approved_manager';
     }
 
-    updateStatus({ id, status: nextStatus, billable: true }); 
+    updateStatus({ 
+      id, 
+      status: nextStatus, 
+      billable: isBillable,
+      approvalComments: approvalComments 
+    }); 
+    setApprovingId(null);
+    setApprovalComments("");
   };
 
   const handleReject = () => {
@@ -121,7 +128,7 @@ export default function Approvals() {
                     <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => setRejectId(expense.id)}>
                       <X className="w-4 h-4 mr-1" /> Reject
                     </Button>
-                    <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleApprove(expense.id)}>
+                    <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => setApprovingId(expense.id)}>
                       <Check className="w-4 h-4 mr-1" /> Approve
                     </Button>
                   </div>
@@ -138,6 +145,42 @@ export default function Approvals() {
           </TableBody>
         </Table>
       </div>
+
+      {/* Approval Dialog */}
+      <Dialog open={!!approvingId} onOpenChange={(open) => !open && setApprovingId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Approve Expense Claim</DialogTitle>
+            <DialogDescription>
+              Confirm approval and add any relevant comments or billable settings.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Billable to Client</span>
+              <Button 
+                variant={isBillable ? "default" : "outline"}
+                size="sm"
+                onClick={() => setIsBillable(!isBillable)}
+              >
+                {isBillable ? "Yes, Billable" : "No, Internal"}
+              </Button>
+            </div>
+            <div className="space-y-2">
+              <span className="text-sm font-medium">Approval Comments</span>
+              <Textarea 
+                placeholder="Optional comments for the employee..." 
+                value={approvalComments}
+                onChange={(e) => setApprovalComments(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setApprovingId(null)}>Cancel</Button>
+            <Button className="bg-green-600 hover:bg-green-700" onClick={() => approvingId && handleApprove(approvingId)}>Confirm Approval</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Reject Dialog */}
       <Dialog open={!!rejectId} onOpenChange={(open) => !open && setRejectId(null)}>

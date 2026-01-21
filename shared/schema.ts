@@ -21,10 +21,11 @@ export const expenses = pgTable("expenses", {
   date: date("date").notNull(),
   userId: varchar("user_id").notNull().references(() => users.id),
   companyId: integer("company_id").notNull().references(() => companies.id),
-  status: text("status", { enum: ['pending', 'approved_manager', 'approved_finance', 'rejected'] }).default('pending').notNull(),
+  status: text("status", { enum: ['pending', 'approved_manager', 'approved_finance', 'rejected', 'processed'] }).default('pending').notNull(),
   billable: boolean("billable").default(false).notNull(),
   receiptUrl: text("receipt_url"),
   rejectionReason: text("rejection_reason"),
+  approvalComments: text("approval_comments"),
   approvedBy: varchar("approved_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
 });

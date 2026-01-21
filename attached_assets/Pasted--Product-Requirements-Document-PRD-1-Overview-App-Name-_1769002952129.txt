@@ -1,0 +1,412 @@
+# Product Requirements Document (PRD)
+
+## 1\. Overview
+
+**App Name:** ExpenseVault
+
+ExpenseVault is a comprehensive Progressive Web App (PWA) designed to streamline employee expense claim management with advanced company-wise and billable expense tracking capabilities. The application enables employees to submit expense claims while categorizing them as internal company expenses or external client-related expenses, providing complete transparency in expense allocation.
+
+The primary target audience includes corporate employees, managers, finance teams, and administrators who need efficient expense management workflows. ExpenseVault solves the critical problem of expense visibility by maintaining company-wise ledgers, enabling clear differentiation between company-borne expenses and client-billable amounts, while providing a structured approval workflow that ensures proper authorization and financial control.
+
+## 2\. Essential Core Features
+
+### User Management & Authentication
+
+* Secure login/logout with role-based access (Employee, Manager, Finance, Admin)
+* User profile management
+* Password reset functionality
+* Multi-tenant company structure support
+
+### Expense Management
+
+* Create new expense claims with receipt upload
+* Categorize expenses as Internal Company or External Client
+* Select from master list of companies
+* Add expense details (amount, date, category, description)
+* Draft saving functionality
+* Expense status tracking (Draft, Submitted, Approved, Rejected, Processed)
+
+### Company Master Management
+
+* Admin-controlled company database
+* Add, update, delete company records
+* Company categorization (Internal/External Client)
+* Company-wise expense ledger maintenance
+
+### Approval Workflow
+
+* Three-tier approval process: Employee → Manager → Finance
+* Manager approval/rejection with comments
+* Manager billable/non-billable marking for client expenses
+* Email notifications for status changes
+* Approval history tracking
+
+### Reporting & Analytics
+
+* Company-wise expense reports
+* Billable vs non-billable expense breakdown
+* Monthly/quarterly expense summaries
+* Export functionality for finance team
+* Real-time expense dashboards
+
+### Receipt Management
+
+* Photo capture and upload
+* Receipt attachment to expense claims
+* Image compression and storage optimization
+* Receipt viewing and download capabilities
+
+## 3\. Tech Stack
+
+### Front-End
+
+* **Framework:** React with TypeScript
+* **Styling:** Tailwind CSS for responsive design
+* **Build Tool:** Vite for fast development and optimized builds
+* **PWA Features:** Service worker for offline capability, push notifications, app-like experience
+
+### Back-End
+
+* **Database & Auth:** Supabase
+    * PostgreSQL database for expense data and user management
+    * Row Level Security (RLS) for multi-tenant data isolation
+    * Built-in authentication with role-based access control
+    * Real-time subscriptions for live updates
+    * File storage for receipt images
+
+### APIs & Integrations
+
+* **Email Service:** Supabase Edge Functions for notification emails
+* **File Storage:** Supabase Storage for receipt images
+* **Push Notifications:** Web Push API for PWA notifications
+* **Camera API:** Web Camera API for receipt capture
+* **Export:** Client-side PDF/Excel generation libraries
+
+### Additional Requirements
+
+* Responsive design optimized for mobile devices
+* Offline-first architecture with sync capabilities
+* Progressive enhancement for various device capabilities
+* Cross-browser compatibility
+
+## 4\. Design Preferences
+
+### Interface
+
+The interface should feature a clean, professional business aesthetic with intuitive navigation optimized for mobile-first usage while maintaining desktop compatibility.
+
+### Color Palette
+
+* **Primary:** #2563EB (Professional Blue) - for main actions and headers
+* **Secondary:** #64748B (Slate Gray) - for secondary text and borders
+* **Accent:** #059669 (Success Green) - for approved status and positive actions
+* **Error:** #DC2626 (Red) - for rejected status and error states
+* **Warning:** #D97706 (Amber) - for pending status and cautions
+
+### Typography
+
+* **Headings:** Inter or Poppins for modern, clean headings
+* **Body Text:** System font stack (SF Pro, Roboto, Arial) for optimal readability across devices
+
+### Design Considerations
+
+* Card-based layout for expense items
+* Clear visual hierarchy for approval status
+* Thumb-friendly touch targets for mobile interaction
+* Consistent iconography for expense categories
+* Loading states and skeleton screens for better UX
+
+## 5\. All Screens/Pages
+
+### `/login` \- Login Screen
+
+**UI Elements:**
+
+* Company logo/app branding
+* Email input field
+* Password input field with show/hide toggle
+* "Remember Me" checkbox
+* Login button
+* "Forgot Password?" link
+* App version information
+
+**Navigation:**
+
+* Entry: Direct access, redirect from protected routes
+* Exit: Successful login redirects to dashboard based on user role
+
+### `/dashboard` \- Main Dashboard
+
+**UI Elements:**
+
+* Top navigation bar with user avatar and logout option
+* Role-specific welcome message
+* Quick stats cards (pending approvals, total expenses, etc.)
+* Recent expense claims list
+* Quick action buttons (New Expense, View Reports)
+* Bottom navigation menu
+* Pull-to-refresh functionality
+
+**Navigation:**
+
+* Entry: Post-login redirect, home navigation
+* Exit: Bottom nav to other sections, logout option
+
+### `/expenses` \- Expense List
+
+**UI Elements:**
+
+* Search and filter bar
+* Expense status filter chips (All, Draft, Pending, Approved, Rejected)
+* Expense cards with thumbnail, amount, status, date
+* Floating action button for new expense
+* Infinite scroll loading
+* Swipe actions for quick operations
+
+**Navigation:**
+
+* Entry: Bottom nav, dashboard links
+* Exit: Bottom nav, expense detail navigation
+
+### `/expenses/new` \- Create New Expense
+
+**UI Elements:**
+
+* Step-by-step form wizard
+* Receipt capture/upload button with camera icon
+* Expense type selector (Internal/External Client)
+* Company dropdown selection
+* Amount input with currency
+* Date picker
+* Category dropdown
+* Description text area
+* Save as Draft button
+* Submit button
+* Form validation messages
+
+**Navigation:**
+
+* Entry: FAB from expense list, dashboard quick action
+* Exit: Save/submit redirects to expense list, back navigation
+
+### `/expenses/:id` \- Expense Details
+
+**UI Elements:**
+
+* Expense header with status badge
+* Receipt image viewer with zoom
+* Expense details section
+* Approval timeline component
+* Manager-only billable toggle (conditional)
+* Action buttons (Edit, Delete, Approve, Reject) based on user role and status
+* Comments/notes section
+* Back navigation button
+
+**Navigation:**
+
+* Entry: Expense list item tap
+* Exit: Back button, bottom navigation
+
+### `/expenses/:id/edit` \- Edit Expense
+
+**UI Elements:**
+
+* Pre-populated form fields
+* Same layout as create expense
+* Updated receipt upload option
+* Save changes button
+* Cancel button
+* Delete expense option
+
+**Navigation:**
+
+* Entry: Edit button from expense details
+* Exit: Save redirects to expense details, cancel returns to details
+
+### `/companies` \- Company Management \(Admin Only\)
+
+**UI Elements:**
+
+* Company list with search functionality
+* Add new company FAB
+* Company cards with edit/delete options
+* Company type indicators (Internal/External)
+* Swipe-to-delete functionality
+
+**Navigation:**
+
+* Entry: Admin menu, bottom navigation
+* Exit: Bottom navigation
+
+### `/companies/new` \- Add Company \(Admin Only\)
+
+**UI Elements:**
+
+* Company name input
+* Company type radio buttons (Internal/External Client)
+* Company details form
+* Save button
+* Cancel button
+
+**Navigation:**
+
+* Entry: FAB from companies list
+* Exit: Save redirects to companies list
+
+### `/reports` \- Reports Dashboard
+
+**UI Elements:**
+
+* Date range selector
+* Company filter dropdown
+* Report type tabs (Summary, Detailed, Billable)
+* Interactive charts and graphs
+* Export buttons (PDF, Excel)
+* Data tables with sorting
+* Refresh button
+
+**Navigation:**
+
+* Entry: Bottom navigation, dashboard links
+* Exit: Bottom navigation
+
+### `/profile` \- User Profile
+
+**UI Elements:**
+
+* User avatar and upload option
+* Personal information form
+* Change password section
+* Notification preferences
+* App settings
+* Logout button
+* Save changes button
+
+**Navigation:**
+
+* Entry: Top navigation avatar, bottom navigation
+* Exit: Bottom navigation, logout
+
+### `/notifications` \- Notifications Center
+
+**UI Elements:**
+
+* Notification list with timestamps
+* Mark as read functionality
+* Notification type icons
+* Clear all button
+* Notification preferences link
+
+**Navigation:**
+
+* Entry: Push notification tap, menu option
+* Exit: Bottom navigation, back button
+
+### `/settings` \- App Settings
+
+**UI Elements:**
+
+* General preferences section
+* Notification settings toggles
+* Theme selector
+* Language selector
+* Cache management options
+* About section with version info
+
+**Navigation:**
+
+* Entry: Profile screen, menu option
+* Exit: Back navigation
+
+## 6\. App Menu and Navigation Structure
+
+### Primary Navigation: Bottom Tab Bar
+
+* **Home:** Dashboard with overview
+* **Expenses:** Expense management section
+* **Reports:** Analytics and reporting (Manager/Finance/Admin only)
+* **Profile:** User settings and account management
+
+### Secondary Navigation: Hamburger Menu
+
+* Companies (Admin only)
+* Notifications
+* Settings
+* Help & Support
+* Logout
+
+### Navigation Hierarchy
+
+```
+ExpenseVault App
+├── Authentication
+│   ├── Login
+│   └── Password Reset
+├── Dashboard (Home Tab)
+│   ├── Overview Cards
+│   └── Quick Actions
+├── Expenses (Expenses Tab)
+│   ├── Expense List
+│   ├── Create/Edit Expense
+│   └── Expense Details
+├── Reports (Reports Tab)
+│   ├── Summary Reports
+│   ├── Detailed Reports
+│   └── Export Functions
+├── Profile (Profile Tab)
+│   ├── User Information
+│   └── App Settings
+└── Admin Functions (Hamburger Menu)
+    ├── Company Management
+    ├── User Management
+    └── System Settings
+```
+
+### Role-based Navigation
+
+* **Employee:** Home, Expenses, Profile
+* **Manager:** Home, Expenses, Reports (team), Profile
+* **Finance:** Home, Expenses, Reports (all), Profile
+* **Admin:** Full access including Companies and Settings
+
+## 7\. User Flow
+
+### Employee Expense Submission Flow
+
+1. **Login:** User opens ExpenseVault PWA and authenticates with credentials
+2. **Dashboard:** System displays personalized dashboard with pending expense count and quick actions
+3. **Create Expense:** User taps "New Expense" button or FAB from expenses section
+4. **Expense Type Selection:** User selects expense type (Internal Company or External Client)
+5. **Company Selection:** User chooses relevant company from dropdown list
+6. **Receipt Capture:** User taps camera icon to capture receipt photo or upload from gallery
+7. **Expense Details:** User fills in amount, date, category, and description
+8. **Review:** User reviews all details and receipt attachment
+9. **Submit:** User submits expense claim, system sends notification to manager
+10. **Tracking:** User can track approval status through expenses list and notifications
+
+### Manager Approval Flow
+
+1. **Notification:** Manager receives push notification for new expense claim
+2. **Review:** Manager opens expense details to review all information and receipt
+3. **Decision:** Manager approves or rejects with optional comments
+4. **Billable Marking:** For external client expenses, manager marks as billable or non-billable
+5. **Submit Decision:** System updates expense status and notifies employee and finance team
+6. **Finance Review:** Finance team receives approved expenses for final processing
+
+### Admin Company Management Flow
+
+1. **Access:** Admin navigates to company management section
+2. **View Companies:** Admin reviews current company list with internal/external categorization
+3. **Add Company:** Admin taps add button to create new company entry
+4. **Company Details:** Admin enters company name, type, and relevant details
+5. **Save:** System adds company to master list, available for expense categorization
+6. **Maintenance:** Admin can edit or remove companies as business needs change
+
+### Finance Reporting Flow
+
+1. **Access Reports:** Finance user navigates to reports section
+2. **Filter Selection:** User selects date range, company, and report type
+3. **Generate Report:** System creates company-wise expense breakdown showing billable vs non-billable
+4. **Review Data:** Finance team reviews expense allocation and billing information
+5. **Export:** User exports report in required format for billing and accounting processes
+6. **Process Billing:** Finance team uses billable expense data for client invoicing

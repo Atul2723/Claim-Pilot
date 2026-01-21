@@ -14,7 +14,7 @@ import SubmitClaim from "@/pages/SubmitClaim";
 import Approvals from "@/pages/Approvals";
 import Companies from "@/pages/Companies";
 import Users from "@/pages/Users";
-import Ledger from "@/pages/Ledger";
+import Reports from "@/pages/Reports";
 
 // Protected Layout
 function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
@@ -59,6 +59,7 @@ function Router() {
         <Route path="/my-expenses" component={MyExpenses} />
         <Route path="/submit" component={SubmitClaim} />
         <Route path="/approvals" component={Approvals} />
+        <Route path="/reports" component={Reports} />
         <Route path="/companies" component={Companies} />
         <Route path="/users" component={Users} />
         <Route path="/ledger" component={Ledger} />

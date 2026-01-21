@@ -51,7 +51,7 @@ export default function SubmitClaim() {
     if (existingExpense) {
       form.reset({
         description: existingExpense.description,
-        amount: Number(existingExpense.amount) as any,
+        amount: Number(existingExpense.amount),
         date: new Date(existingExpense.date),
         companyId: existingExpense.companyId,
         billable: existingExpense.billable,

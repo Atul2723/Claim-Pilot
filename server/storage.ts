@@ -80,7 +80,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getExpense(id: number): Promise<any | undefined> {
-    return await db.query.expenses.findFirst({
+    const expense = await db.query.expenses.findFirst({
       where: eq(expenses.id, id),
       with: { 
         user: true, 
@@ -88,6 +88,7 @@ export class DatabaseStorage implements IStorage {
         approver: true 
       }
     });
+    return expense;
   }
 
   async updateExpenseStatus(id: number, updates: UpdateExpenseStatusRequest & { approvedBy?: string }): Promise<Expense> {
@@ -95,6 +96,7 @@ export class DatabaseStorage implements IStorage {
       .set({
         status: updates.status,
         rejectionReason: updates.rejectionReason || null,
+        approvalComments: updates.approvalComments || null,
         billable: updates.billable ?? false,
         approvedBy: updates.approvedBy || null
       })
