@@ -21,9 +21,9 @@ export interface IStorage {
   
   // Expenses
   createExpense(expense: InsertExpense & { userId: string }): Promise<Expense>;
-  getExpenses(userId?: string, role?: string): Promise<(Expense & { company: Company, user: User })[]>;
-  getExpense(id: number): Promise<(Expense & { company: Company, user: User }) | undefined>;
-  updateExpenseStatus(id: number, updates: UpdateExpenseStatusRequest): Promise<Expense>;
+  getExpenses(userId?: string, role?: string): Promise<any[]>;
+  getExpense(id: number): Promise<any | undefined>;
+  updateExpenseStatus(id: number, updates: UpdateExpenseStatusRequest & { approvedBy?: string }): Promise<Expense>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -62,80 +62,42 @@ export class DatabaseStorage implements IStorage {
     return newExpense;
   }
 
-  async getExpenses(userId?: string, role?: string): Promise<(Expense & { company: Company, user: User })[]> {
-    let query = db.select({
-      id: expenses.id,
-      description: expenses.description,
-      amount: expenses.amount,
-      date: expenses.date,
-      userId: expenses.userId,
-      companyId: expenses.companyId,
-      status: expenses.status,
-      billable: expenses.billable,
-      receiptUrl: expenses.receiptUrl,
-      rejectionReason: expenses.rejectionReason,
-      createdAt: expenses.createdAt,
-      company: companies,
-      user: users
-    })
-    .from(expenses)
-    .innerJoin(companies, eq(expenses.companyId, companies.id))
-    .innerJoin(users, eq(expenses.userId, users.id))
-    .orderBy(desc(expenses.date));
-
-    // If employee, only see own expenses
-    if (role === 'employee' && userId) {
-      query.where(eq(expenses.userId, userId));
-    }
-    // Manager sees all? Or maybe just their team? Prompt implies generic Manager role approving. 
-    // "Manager will have the authority to approve/reject expenses" - implies seeing all pending?
-    // Let's assume Manager sees all for now, or maybe we filter by status pending/approved_manager for relevant roles.
-    // Finance sees all.
-
-    // If role is undefined (not passed), return all (internal use)
+  async getExpenses(userId?: string, role?: string): Promise<any[]> {
+    const results = await db.query.expenses.findMany({
+      with: { 
+        user: true, 
+        company: true,
+        approver: true 
+      },
+      orderBy: (expenses, { desc }) => [desc(expenses.date)],
+    });
     
-    // Convert result to match type structure
-    const results = await query;
-    return results.map(row => ({
-      ...row,
-      company: row.company,
-      user: row.user
-    }));
+    if (role === 'admin' || role === 'manager' || role === 'finance') {
+      return results;
+    }
+
+    return results.filter(e => e.userId === userId);
   }
 
-  async getExpense(id: number): Promise<(Expense & { company: Company, user: User }) | undefined> {
-    const [row] = await db.select({
-      id: expenses.id,
-      description: expenses.description,
-      amount: expenses.amount,
-      date: expenses.date,
-      userId: expenses.userId,
-      companyId: expenses.companyId,
-      status: expenses.status,
-      billable: expenses.billable,
-      receiptUrl: expenses.receiptUrl,
-      rejectionReason: expenses.rejectionReason,
-      createdAt: expenses.createdAt,
-      company: companies,
-      user: users
-    })
-    .from(expenses)
-    .innerJoin(companies, eq(expenses.companyId, companies.id))
-    .innerJoin(users, eq(expenses.userId, users.id))
-    .where(eq(expenses.id, id));
-
-    if (!row) return undefined;
-
-    return {
-      ...row,
-      company: row.company,
-      user: row.user
-    };
+  async getExpense(id: number): Promise<any | undefined> {
+    return await db.query.expenses.findFirst({
+      where: eq(expenses.id, id),
+      with: { 
+        user: true, 
+        company: true,
+        approver: true 
+      }
+    });
   }
 
-  async updateExpenseStatus(id: number, updates: UpdateExpenseStatusRequest): Promise<Expense> {
+  async updateExpenseStatus(id: number, updates: UpdateExpenseStatusRequest & { approvedBy?: string }): Promise<Expense> {
     const [updated] = await db.update(expenses)
-      .set(updates)
+      .set({
+        status: updates.status,
+        rejectionReason: updates.rejectionReason || null,
+        billable: updates.billable ?? false,
+        approvedBy: updates.approvedBy || null
+      })
       .where(eq(expenses.id, id))
       .returning();
     return updated;
