@@ -87,7 +87,14 @@ export default function Approvals() {
                     <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600">
                       {expense.user.firstName?.[0]}{expense.user.lastName?.[0]}
                     </div>
-                    {expense.user.firstName} {expense.user.lastName}
+                    <div>
+                      <div className="font-medium">{expense.user.firstName} {expense.user.lastName}</div>
+                      {expense.approver && (
+                        <div className="text-[10px] text-slate-500 flex items-center gap-1">
+                          <Check className="w-2 h-2" /> Approved by {expense.approver.firstName}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </TableCell>
                 <TableCell>{new Date(expense.date).toLocaleDateString()}</TableCell>
