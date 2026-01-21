@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertExpenseSchema, type InsertExpense } from "@shared/schema";
-import { useCreateExpense } from "@/hooks/use-expenses";
+import { useCreateExpense, useExpense, useUpdateExpense } from "@/hooks/use-expenses";
 import { useCompanies } from "@/hooks/use-companies";
 import { useAuth } from "@/hooks/use-auth";
 import { PageHeader } from "@/components/PageHeader";
@@ -10,10 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { UploadCloud } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { z } from "zod";
 
 // Extend schema to handle string inputs from form
@@ -26,7 +26,13 @@ const formSchema = insertExpenseSchema.extend({
 export default function SubmitClaim() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
-  const { mutate, isPending } = useCreateExpense();
+  const searchString = useSearch();
+  const params = new URLSearchParams(searchString);
+  const editId = params.get("edit");
+  
+  const { data: existingExpense, isLoading: isLoadingExpense } = useExpense(Number(editId));
+  const { mutate: createMutation, isPending: isCreating } = useCreateExpense();
+  const { mutate: updateMutation, isPending: isUpdating } = useUpdateExpense();
   const { data: companies } = useCompanies();
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
 
@@ -41,46 +47,51 @@ export default function SubmitClaim() {
     },
   });
 
+  useEffect(() => {
+    if (existingExpense) {
+      form.reset({
+        description: existingExpense.description,
+        amount: Number(existingExpense.amount),
+        date: new Date(existingExpense.date),
+        companyId: existingExpense.companyId,
+        billable: existingExpense.billable,
+      });
+      setReceiptUrl(existingExpense.receiptUrl);
+    }
+  }, [existingExpense, form]);
+
   function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) return;
     
     // Format date to YYYY-MM-DD string as expected by backend `date` type
     const dateString = values.date.toISOString().split('T')[0];
 
-    const payload: InsertExpense = {
+    const payload = {
       ...values,
-      date: dateString, // Override Date object with string
+      date: dateString,
       userId: user.id,
       receiptUrl: receiptUrl,
     };
 
-    mutate(payload, {
-      onSuccess: () => setLocation("/my-expenses"),
-    });
+    if (editId) {
+      updateMutation({ id: Number(editId), ...payload }, {
+        onSuccess: () => setLocation("/my-expenses"),
+      });
+    } else {
+      createMutation(payload as InsertExpense, {
+        onSuccess: () => setLocation("/my-expenses"),
+      });
+    }
   }
 
-  // Get upload parameters for Uppy
-  const getUploadParams = async (file: any) => {
-    const res = await fetch("/api/uploads/request-url", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: file.name,
-        size: file.size,
-        contentType: file.type,
-      }),
-    });
-    const { uploadURL } = await res.json();
-    return {
-      method: "PUT" as const,
-      url: uploadURL,
-      headers: { "Content-Type": file.type },
-    };
-  };
+  if (editId && isLoadingExpense) return <div className="p-8">Loading expense...</div>;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-in">
-      <PageHeader title="Submit Expense Claim" description="Fill out the details below to submit a new expense for approval." />
+      <PageHeader 
+        title={editId ? "Edit Expense Claim" : "Submit Expense Claim"} 
+        description={editId ? "Update your expense details and resubmit for approval." : "Fill out the details below to submit a new expense for approval."} 
+      />
 
       <Card>
         <CardContent className="pt-6">
@@ -94,7 +105,11 @@ export default function SubmitClaim() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Company / Client</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value?.toString()}>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        value={field.value?.toString()}
+                        defaultValue={field.value?.toString()}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select company" />
@@ -161,7 +176,23 @@ export default function SubmitClaim() {
                   <FormLabel>Receipt</FormLabel>
                   <div className="mt-1">
                     <ObjectUploader
-                      onGetUploadParameters={getUploadParams}
+                      onGetUploadParameters={async (file: any) => {
+                        const res = await fetch("/api/uploads/request-url", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            name: file.name,
+                            size: file.size,
+                            contentType: file.type,
+                          }),
+                        });
+                        const { uploadURL } = await res.json();
+                        return {
+                          method: "PUT" as const,
+                          url: uploadURL,
+                          headers: { "Content-Type": file.type },
+                        };
+                      }}
                       onComplete={(result) => {
                         if (result.successful && result.successful.length > 0) {
                           setReceiptUrl(result.successful[0].uploadURL);
@@ -185,8 +216,8 @@ export default function SubmitClaim() {
 
               <div className="pt-4 flex justify-end gap-3">
                 <Button type="button" variant="outline" onClick={() => setLocation("/my-expenses")}>Cancel</Button>
-                <Button type="submit" disabled={isPending}>
-                  {isPending ? "Submitting..." : "Submit Claim"}
+                <Button type="submit" disabled={isCreating || isUpdating}>
+                  {editId ? (isUpdating ? "Updating..." : "Update Claim") : (isCreating ? "Submitting..." : "Submit Claim")}
                 </Button>
               </div>
             </form>

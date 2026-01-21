@@ -78,6 +78,17 @@ export const api = {
         400: errorSchemas.validation,
       },
     },
+    update: {
+      method: 'PATCH' as const,
+      path: '/api/expenses/:id',
+      input: z.any(), // Will use updateExpenseSchema on backend
+      responses: {
+        200: z.custom<typeof expenses.$inferSelect>(),
+        400: errorSchemas.validation,
+        403: errorSchemas.forbidden,
+        404: errorSchemas.notFound,
+      },
+    },
     get: {
       method: 'GET' as const,
       path: '/api/expenses/:id',

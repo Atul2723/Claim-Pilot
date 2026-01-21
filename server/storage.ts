@@ -102,6 +102,14 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return updated;
   }
+
+  async updateExpense(id: number, updates: any): Promise<Expense> {
+    const [updated] = await db.update(expenses)
+      .set(updates)
+      .where(eq(expenses.id, id))
+      .returning();
+    return updated;
+  }
 }
 
 export const storage = new DatabaseStorage();

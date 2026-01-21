@@ -85,6 +85,34 @@ export async function registerRoutes(
     }
   });
 
+  app.patch("/api/expenses/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const user = req.user as any;
+    const dbUser = await storage.getUser(user.claims.sub);
+    const expenseId = Number(req.params.id);
+
+    const existing = await storage.getExpense(expenseId);
+    if (!existing) return res.status(404).json({ message: "Not found" });
+
+    // Only owner can edit, and only if pending or rejected
+    if (existing.userId !== dbUser?.id) return res.status(403).json({ message: "Forbidden" });
+    if (existing.status !== 'pending' && existing.status !== 'rejected') {
+      return res.status(400).json({ message: "Cannot edit an approved expense" });
+    }
+
+    try {
+      // Basic update logic
+      const updated = await storage.updateExpense(expenseId, {
+        ...req.body,
+        status: 'pending', // Reset to pending on edit
+        rejectionReason: null // Clear rejection reason
+      });
+      res.json(updated);
+    } catch (e) {
+      res.status(400).json({ message: "Update failed" });
+    }
+  });
+
   app.get(api.expenses.get.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const expense = await storage.getExpense(Number(req.params.id));

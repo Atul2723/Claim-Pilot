@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatCurrency } from "@/lib/utils";
-import { Link } from "wouter";
-import { FileText, Plus } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { FileText, Plus, Pencil, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function MyExpenses() {
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
   const { data: expenses, isLoading } = useExpenses({ userId: user?.id });
 
   if (isLoading) return <div className="p-8">Loading expenses...</div>;
@@ -36,13 +38,24 @@ export default function MyExpenses() {
               <TableHead>Status</TableHead>
               <TableHead>Approved By</TableHead>
               <TableHead>Receipt</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {expenses?.map((expense: any) => (
               <TableRow key={expense.id} className="hover:bg-slate-50/50">
                 <TableCell>{new Date(expense.date).toLocaleDateString()}</TableCell>
-                <TableCell className="font-medium">{expense.description}</TableCell>
+                <TableCell className="font-medium">
+                  <div className="flex flex-col">
+                    <span>{expense.description}</span>
+                    {expense.status === 'rejected' && expense.rejectionReason && (
+                      <div className="flex items-center gap-1 text-[10px] text-red-500 mt-1">
+                        <Info className="w-2.5 h-2.5" />
+                        Reason: {expense.rejectionReason}
+                      </div>
+                    )}
+                  </div>
+                </TableCell>
                 <TableCell>
                   <span className={`px-2 py-1 rounded text-xs font-medium ${expense.company.isExternal ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-700'}`}>
                     {expense.company.name}
@@ -62,11 +75,23 @@ export default function MyExpenses() {
                     <span className="text-slate-400 text-sm">-</span>
                   )}
                 </TableCell>
+                <TableCell className="text-right">
+                  {(expense.status === 'pending' || expense.status === 'rejected') && (
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-slate-500 hover:text-blue-600"
+                      onClick={() => setLocation(`/submit?edit=${expense.id}`)}
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                  )}
+                </TableCell>
               </TableRow>
             ))}
             {expenses?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
                   No expenses found. Submit your first claim!
                 </TableCell>
               </TableRow>
