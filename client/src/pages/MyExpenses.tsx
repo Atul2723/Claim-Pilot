@@ -34,11 +34,12 @@ export default function MyExpenses() {
               <TableHead>Company</TableHead>
               <TableHead>Amount</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Approved By</TableHead>
               <TableHead>Receipt</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {expenses?.map((expense) => (
+            {expenses?.map((expense: any) => (
               <TableRow key={expense.id} className="hover:bg-slate-50/50">
                 <TableCell>{new Date(expense.date).toLocaleDateString()}</TableCell>
                 <TableCell className="font-medium">{expense.description}</TableCell>
@@ -49,6 +50,9 @@ export default function MyExpenses() {
                 </TableCell>
                 <TableCell className="font-mono">{formatCurrency(Number(expense.amount))}</TableCell>
                 <TableCell><StatusBadge status={expense.status as any} /></TableCell>
+                <TableCell className="text-sm text-slate-600">
+                  {expense.approver ? `${expense.approver.firstName} ${expense.approver.lastName}` : '-'}
+                </TableCell>
                 <TableCell>
                   {expense.receiptUrl ? (
                     <a href={expense.receiptUrl} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline flex items-center gap-1 text-sm">
